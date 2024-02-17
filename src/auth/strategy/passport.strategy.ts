@@ -4,9 +4,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { RegisteredUser } from '../entity/registered.user.entity';
 import { EntityManager, Repository } from 'typeorm';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PayloadDto } from '../dto';
 
+@Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private configService: ConfigService,
@@ -27,6 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       user = await this.userRepository.findOneBy({
         email: payload.email,
       });
+      delete user.password;
       console.log(' user details ', user);
     } catch (err) {
       throw new HttpException('USER NOT FOUND ---- ', HttpStatus.NOT_FOUND);

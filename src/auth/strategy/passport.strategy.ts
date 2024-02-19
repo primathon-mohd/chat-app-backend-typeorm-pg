@@ -29,7 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         email: payload.email,
       });
       delete user.password;
-      console.log(' user details ', user);
+      // console.log(' user details ', user);
     } catch (err) {
       throw new HttpException('USER NOT FOUND ---- ', HttpStatus.NOT_FOUND);
     }

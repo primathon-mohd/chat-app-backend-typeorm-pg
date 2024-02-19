@@ -12,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { RegisteredUser } from './entity/registered.user.entity';
 import { EntityManager, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class AuthService {
@@ -48,9 +49,12 @@ export class AuthService {
       //   throw new HttpException(err, HttpStatus.EXPECTATION_FAILED);
       throw new BadRequestException(err.message);
     }
+
+    // const wstoken = await this.signTokenWs(payload);
     return {
       user,
       token,
+      // wstoken,
     };
   }
 
@@ -79,9 +83,12 @@ export class AuthService {
       email: user.email,
     };
     const token = await this.signToken(payload);
+
+    // const wstoken = await this.signTokenWs(payload);
     return {
       user,
       token,
+      // wstoken,
     };
   }
 
@@ -90,6 +97,21 @@ export class AuthService {
       expiresIn: this.configService.get('TOKEN_EXPIRES_IN'),
       secret: this.configService.get('JWT_SECRET'),
     });
+    return {
+      access_token: token,
+    };
+  }
+
+  async signTokenWs(payload: PayloadDto): Promise<AccessToken> {
+    let token: string;
+    try {
+      token = await this.jwtService.signAsync(payload, {
+        expiresIn: this.configService.get('TOKEN_EXPIRES_IN'),
+        secret: this.configService.get('JWT_SECRET_WS'),
+      });
+    } catch (err) {
+      throw new WsException(' ERROR ---  in WS sign token --');
+    }
     return {
       access_token: token,
     };

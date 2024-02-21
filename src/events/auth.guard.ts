@@ -22,8 +22,16 @@ export class WsJwtGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
       const client: Socket = context.switchToWs().getClient<Socket>();
-      const authToken: string = client.handshake.headers.authorization;
+      let authToken: string = client.handshake.headers.authorization;
       console.log(authToken, 'Inside canActivate!!! ');
+      if (authToken === undefined) {
+        console.log(
+          'Inside auth token client side -----------',
+          client.handshake.auth,
+        );
+        authToken = client.handshake.auth.token;
+        // console.log(authToken, client.handshake.auth['token']);
+      }
       const user: RegisteredUser = await this.jwtService.verifyAsync(
         authToken.split(' ')[1],
         {

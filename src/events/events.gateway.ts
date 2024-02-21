@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, Req, UseGuards } from '@nestjs/common';
+import { OnModuleInit, Req, UseGuards } from '@nestjs/common';
 import {
   SubscribeMessage,
   WebSocketGateway,
@@ -16,10 +16,16 @@ import { RegisteredUser } from 'src/auth/entity/registered.user.entity';
 import { MessageStructure } from 'src/users/entity/message.entity';
 import { MessageDto } from 'src/users/dto';
 import { Repository } from 'typeorm';
+import { MessageSendDto } from './dto';
 
 @WebSocketGateway(3001, {
   cors: {
+    // origin: ['http://localhost:5500', 'http://localhost:8080'],
     origin: '*',
+    // methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD'],
+    // preflightContinue: false,
+    // optionsSuccessStatus: 204,
+    // credentials: true,
   },
   // transports: ['websocket'],
   // namespace: 'events',
@@ -45,9 +51,14 @@ export class EventsGateway implements OnModuleInit {
   // @UseGuards(JwtGuard)
   // @UseFilters(new BaseWsExceptionFilter())
   @SubscribeMessage('events')
-  async handleEvent(@MessageBody() data: any, @Req() req: Request) {
+  async handleEvent(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: any,
+    @Req() req: Request,
+  ) {
+    const socketId = socket.id;
     console.log('inside handle events EVENTS ', data);
-    console.log(' Req user ', req.user['email']);
+    console.log(' Req user ', req.user['email'], 'socket id ', socketId);
     this.server.emit('onMessage', {
       msg: 'new message',
       content: data,
@@ -81,5 +92,34 @@ export class EventsGateway implements OnModuleInit {
     socket.handshake.headers.authorization.split(' ')[1];
     const event = 'example';
     return { event, data };
+  }
+
+  @SubscribeMessage('send')
+  handleSendMessage(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: MessageSendDto,
+    // @Req() req: Request,
+  ) {
+    // const senderId = socket.id;
+    //Using object destructuring .
+    // console.log('req info ', req.user['email']);
+    const { senderName, receiverName, msg } = body;
+    console.log(
+      'senderName ',
+      senderName,
+      ' receiverName ',
+      receiverName,
+      ' msg ',
+      msg,
+    );
+    const senderId = socket.id;
+    // either provided some receiverId here , or if stored into database , fetch it and then use it . here.
+    const receiverId = 'Unknown';
+    console.log(' senderId ', senderId, ' receiver Id ', receiverId);
+    // For now , sending to the same senderId
+    this.server.to(senderId).emit('receive', {
+      status: 'msg received',
+      content: msg,
+    });
   }
 }

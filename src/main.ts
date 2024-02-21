@@ -10,6 +10,10 @@ async function bootstrap() {
     }),
   );
   // app.setGlobalPrefix('');
+  // app.enableShutdownHooks();
+  app.enableCors();
   await app.listen(3000);
+
+  // app.close();
 }
 bootstrap();

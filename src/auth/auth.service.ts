@@ -12,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { RegisteredUser } from './entity/registered.user.entity';
 import { EntityManager, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class AuthService {
@@ -48,9 +49,12 @@ export class AuthService {
       //   throw new HttpException(err, HttpStatus.EXPECTATION_FAILED);
       throw new BadRequestException(err.message);
     }
+
+    // const wstoken = await this.signTokenWs(payload);
     return {
       user,
       token,
+      // wstoken,
     };
   }
 
@@ -79,9 +83,12 @@ export class AuthService {
       email: user.email,
     };
     const token = await this.signToken(payload);
+
+    // const wstoken = await this.signTokenWs(payload);
     return {
       user,
       token,
+      // wstoken,
     };
   }
 
@@ -93,5 +100,86 @@ export class AuthService {
     return {
       access_token: token,
     };
+  }
+
+  async signTokenWs(payload: PayloadDto): Promise<AccessToken> {
+    let token: string;
+    try {
+      token = await this.jwtService.signAsync(payload, {
+        expiresIn: this.configService.get('TOKEN_EXPIRES_IN'),
+        secret: this.configService.get('JWT_SECRET_WS'),
+      });
+    } catch (err) {
+      throw new WsException(' ERROR ---  in WS sign token --');
+    }
+    return {
+      access_token: token,
+    };
+  }
+
+  async getAllUsers() {
+    try {
+      return await this.userRepository.find();
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve all users',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
+  async findSocketIdByUsername(username: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username: username },
+      });
+      const id = user.socketId;
+      return id;
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve SocketId',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
+  async findUsernameUsingSocketId(socketId: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { socketId: socketId },
+      });
+      return user.username;
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve Username',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
+  async findUserIdByUserName(username: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username: username },
+      });
+      return user.id;
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve Username',
+        HttpStatus.NOT_FOUND,
+      );
+    }
   }
 }

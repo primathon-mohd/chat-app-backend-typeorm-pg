@@ -19,6 +19,9 @@ export class RegisteredUser {
   @Column('text', { name: 'bcrypt' })
   password: string;
 
+  @Column('varchar', { default: 'NA' })
+  socketId: string;
+
   @Column('numeric', { default: 21, name: 'age' })
   age: number;
 

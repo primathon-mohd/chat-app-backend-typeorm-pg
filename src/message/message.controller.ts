@@ -1,7 +1,9 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { MessageService } from './message.service';
+import { JwtGuard } from 'src/auth/guard';
 
 @Controller('message')
+@UseGuards(JwtGuard)
 export class MessageController {
   constructor(private messageService: MessageService) {}
   @Get('chats')

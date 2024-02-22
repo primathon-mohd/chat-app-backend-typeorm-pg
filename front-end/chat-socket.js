@@ -28,7 +28,13 @@ function joinChat() {
 async function populateUserDropdown() {
   const senderName = document.getElementById('username').value;
   const userDropdown = document.getElementById('userDropdown');
-  const response = await fetch(FETCH_USERS_URL);
+  const response = await fetch(FETCH_USERS_URL, {
+    method: 'GET',
+    headers: {
+      Authorization:
+        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiYXJ1bkBnbWFpbC5jb20iLCJpYXQiOjE3MDg1MTc5NDUsImV4cCI6MTcwODYwNDM0NX0.BFn9qipY6jUTIhBGZ2EFT_HL1R3JXFae3JbFQ8ZmRr4',
+    },
+  });
   const allUsers = await response.json();
   console.log(' inside populateUserDropdown ', allUsers);
   const allUsersExceptCurrent = allUsers.filter(
@@ -52,12 +58,37 @@ async function startChat() {
   chatContainer.style.display = 'block';
   const senderUrl = `${FETCH_USER_USERID}${senderName}`;
   const receiverUrl = `${FETCH_USER_USERID}${receiverName}`;
-  const senderUserId = await fetch(senderUrl);
-  const receiverUserId = await fetch(receiverUrl);
+  const senderUserId = await fetch(senderUrl, {
+    method: 'GET',
+    headers: {
+      Authorization:
+        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiYXJ1bkBnbWFpbC5jb20iLCJpYXQiOjE3MDg1MTc5NDUsImV4cCI6MTcwODYwNDM0NX0.BFn9qipY6jUTIhBGZ2EFT_HL1R3JXFae3JbFQ8ZmRr4',
+    },
+  });
+  const receiverUserId = await fetch(receiverUrl, {
+    method: 'GET',
+    headers: {
+      Authorization:
+        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiYXJ1bkBnbWFpbC5jb20iLCJpYXQiOjE3MDg1MTc5NDUsImV4cCI6MTcwODYwNDM0NX0.BFn9qipY6jUTIhBGZ2EFT_HL1R3JXFae3JbFQ8ZmRr4',
+    },
+  });
+  console.log(
+    ` senderUserId ${senderUserId} and receiverUserId ${receiverUserId} `,
+  );
   const sender_user_id = await senderUserId.json();
   const receiver_user_id = await receiverUserId.json();
-  const FETCH_HISTORY_URL = `${SERVER_URL}${FETCH_CHAT_HISTORY_PATH}sender_user_id=${sender_user_id.data}&receiver_user_id=${receiver_user_id.data}`;
-  const history = await fetch(FETCH_HISTORY_URL);
+  console.log(
+    ` senderUserId ${sender_user_id} and receiverUserId ${receiver_user_id} `,
+  );
+  // Don't use sender_user_id  and receiver_user_id  ..
+  const FETCH_HISTORY_URL = `${SERVER_URL}${FETCH_CHAT_HISTORY_PATH}sender_user_id=${sender_user_id}&receiver_user_id=${receiver_user_id}`;
+  const history = await fetch(FETCH_HISTORY_URL, {
+    method: 'GET',
+    headers: {
+      Authorization:
+        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiYXJ1bkBnbWFpbC5jb20iLCJpYXQiOjE3MDg1MTc5NDUsImV4cCI6MTcwODYwNDM0NX0.BFn9qipY6jUTIhBGZ2EFT_HL1R3JXFae3JbFQ8ZmRr4',
+    },
+  });
   const chatHistory = await history.json();
   const chatHistoryDiv = document.getElementById('chat-history');
   chatHistoryDiv.innerHTML = '';
@@ -70,7 +101,7 @@ async function startChat() {
       chatHistoryDiv.appendChild(chatItem);
     });
   } else {
-    chatHistoryDiv.appendChild(chatItem);
+    // chatHistoryDiv.appendChild(chatItem);
   }
 }
 

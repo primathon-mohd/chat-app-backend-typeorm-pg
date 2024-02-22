@@ -17,13 +17,19 @@ import { MessageDto } from './dto';
 
 @Controller('users')
 // @UseGuards(AuthGuard('jwt'))
-// @UseGuards(JwtGuard)
+@UseGuards(JwtGuard)
 export class UsersController {
   constructor(private userService: UsersService) {}
 
   @Get('info/:id')
   async retrieve(@Req() req: Request, @Param('id') id: number) {
     console.log('Inside retrieve', req.user, req.user['email']);
+    console.log(
+      ' Inside get --Authorization ',
+      req.header('Authorization'),
+      '\n authorization ',
+      req.header('authorization'),
+    );
     const response = await this.userService.retrieve(req.user['email'], id);
     return response;
   }
@@ -41,7 +47,9 @@ export class UsersController {
   ) {
     // console.log('Inside findUserIdByUserName ', req.user['email']);
     // const email = req.user['email'];
-    return await this.userService.findUserIdByUserName(username);
+    const id = await this.userService.findUserIdByUserName(username);
+    console.log('  id ', id);
+    return id;
   }
 
   @Post('create')

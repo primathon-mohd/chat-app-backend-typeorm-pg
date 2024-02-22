@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { EventsModule } from './events/events.module';
 import { SocketModule } from './socket/socket.module';
+import { MessageModule } from './message/message.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { SocketModule } from './socket/socket.module';
     AuthModule,
     UsersModule,
     EventsModule,
+    MessageModule,
     // SocketModule,
   ],
   controllers: [AppController],

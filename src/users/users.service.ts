@@ -1,9 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RegisteredUser } from 'src/auth/entity/registered.user.entity';
 import { Repository } from 'typeorm';
 import { MessageStructure } from './entity/message.entity';
 import { MessageDto } from './dto';
+import { SignUpDto } from 'src/auth/dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -137,6 +144,133 @@ export class UsersService {
       return 'All Deleted';
     } catch (err) {
       throw new NotFoundException(err.message);
+    }
+  }
+
+  async getAllUsers() {
+    try {
+      // await this.userRepository.findOneByOrFail({
+      //   email,
+      // });
+      return await this.userRepository.find();
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve all users',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
+  async registerOrLoginUser(createUserDto: SignUpDto) {
+    try {
+      let user = await this.userRepository.findOne({
+        where: { username: createUserDto.username },
+      });
+      console.log(' inside userService , registerOrLogin ', user);
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+      if (user) {
+        const passwordMatch = await bcrypt.compare(
+          createUserDto.password,
+          user.password,
+        );
+        if (!passwordMatch) {
+          console.log(' Password does not match !!');
+          throw new HttpException(
+            ' Password Not match !! ',
+            HttpStatus.FORBIDDEN,
+          );
+        }
+        console.log(' Password matched !! ', passwordMatch);
+        user.socketId = createUserDto.socketId;
+        await this.updateUserInfo(createUserDto.email, user);
+      } else {
+        user = await this.userRepository.create({
+          email: createUserDto.email,
+          username: createUserDto.username,
+          socketId: createUserDto.socketId,
+          password: hashedPassword,
+        });
+        await this.userRepository.save(user);
+      }
+      return true;
+    } catch (error) {
+      // throw new HttpException(' Password Not match !! ', HttpStatus.FORBIDDEN);
+      console.log('Error in registerOrLoginUser:', error.message);
+      return false;
+    }
+  }
+
+  async updateUserInfo(email: string, createUserDto: RegisteredUser) {
+    //Check if email from jwt token is valid and exists in user repository..
+    const response = await this.userRepository.findOneByOrFail({
+      email,
+    });
+    const updateResult = await this.userRepository
+      .createQueryBuilder()
+      .update(RegisteredUser, createUserDto)
+      .where('email = :email', { email: email })
+      .returning('*')
+      .updateEntity(true)
+      .execute();
+    console.log(' update result :: ', updateResult);
+    delete response.password;
+  }
+
+  async findUserIdByUserName(username: string) {
+    try {
+      // await this.userRepository.findOneByOrFail({
+      //   email,
+      // });
+      const user = await this.userRepository.findOne({
+        where: { username },
+      });
+      console.log(' findUserId By Username ', user);
+      return user.id;
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve Username',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  async findSocketIdByUsername(username: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username },
+      });
+      const id = user.socketId;
+      return id;
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve SocketId',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async findUsernameUsingSocketId(socketId: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { socketId },
+      });
+      return user.username;
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve Username',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

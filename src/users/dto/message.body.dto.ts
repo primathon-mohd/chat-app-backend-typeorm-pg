@@ -22,6 +22,14 @@ export class MessageDto {
   @IsString()
   msg: string;
 
+  @IsNumber()
+  @IsNotEmpty()
+  sender_user_id: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  receiver_user_id: number;
+
   @IsOptional()
   @IsNotEmpty()
   @IsDateString()

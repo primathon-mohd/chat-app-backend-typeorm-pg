@@ -22,6 +22,10 @@ export class SignUpDto {
   password: string;
 
   @IsNotEmpty()
+  @IsString()
+  socketId: string;
+
+  @IsNotEmpty()
   @IsOptional()
   @IsNumber()
   age: number;

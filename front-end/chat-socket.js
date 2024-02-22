@@ -1,14 +1,19 @@
-const socket = io(SERVER_URL
-, {
+const socket = io(SERVER_URL, {
   auth: {
     token:
-      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjExLCJlbWFpbCI6ImFyanVuQGdtYWlsLmNvbSIsImlhdCI6MTcwODMyOTU3NSwiZXhwIjoxNzA4NDE1OTc1fQ.Ruv9-FHDqOH7UNX2NvuXqVBwh44NId3zN6ZNc9zo9LU',
+      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiYXJ1bkBnbWFpbC5jb20iLCJpYXQiOjE3MDg1NzgzMTMsImV4cCI6MTcwODY2NDcxM30.YVxtNw5HdNBSVtUtWcf_9HGrHitHJhxpD6hhKgqJtms',
   },
 });
 function joinChat() {
   const senderName = document.getElementById('username').value;
   password = document.getElementById('password').value;
-  socket.emit('new-user-joined', { username: senderName, password: password });
+  email = document.getElementById('email').value;
+  console.log('Inside join chat!!');
+  socket.emit('new-user-joined', {
+    email,
+    username: senderName,
+    password,
+  });
   socket.on('registration-response', (response) => {
     if (response.success) {
       populateUserDropdown();
@@ -25,9 +30,11 @@ async function populateUserDropdown() {
   const userDropdown = document.getElementById('userDropdown');
   const response = await fetch(FETCH_USERS_URL);
   const allUsers = await response.json();
-  const allUsersExceptCurrent = allUsers.data.filter(
+  console.log(' inside populateUserDropdown ', allUsers);
+  const allUsersExceptCurrent = allUsers.filter(
     (user) => user.username !== senderName,
   );
+  console.log(' allUserExceptCurrent ', allUsersExceptCurrent);
   allUsersExceptCurrent.forEach((user) => {
     const option = document.createElement('option');
     option.value = user.id;
@@ -68,14 +75,16 @@ async function startChat() {
 }
 
 socket.on('receive', (data) => {
+  // document.getElementById('chat-b').innerHTML +=
+  //   `<p>${data.receiverName}: ${data.message}</p>`;
   document.getElementById('chat').innerHTML +=
     `<p>${data.senderName}: ${data.message}</p>`;
 });
 
 function sendMessage() {
   const senderName = document.getElementById('username').value;
-  // const receiverName = userDropdown.options[userDropdown.selectedIndex].text;
-  const receiverName = senderName;
+  const receiverName = userDropdown.options[userDropdown.selectedIndex].text;
+  // const receiverName = senderName;
   const messageInput = document.getElementById('message');
   const message = messageInput.value.trim();
   if (!message) {

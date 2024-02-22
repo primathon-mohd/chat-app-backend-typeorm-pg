@@ -13,4 +13,9 @@ export class SignInDto {
   @IsNotEmpty()
   @IsString()
   password: string;
+
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
+  socketId: string;
 }

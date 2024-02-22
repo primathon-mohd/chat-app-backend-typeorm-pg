@@ -116,4 +116,70 @@ export class AuthService {
       access_token: token,
     };
   }
+
+  async getAllUsers() {
+    try {
+      return await this.userRepository.find();
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve all users',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
+  async findSocketIdByUsername(username: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username: username },
+      });
+      const id = user.socketId;
+      return id;
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve SocketId',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
+  async findUsernameUsingSocketId(socketId: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { socketId: socketId },
+      });
+      return user.username;
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve Username',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
+  async findUserIdByUserName(username: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username: username },
+      });
+      return user.id;
+    } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+      throw new HttpException(
+        'Failed to retrieve Username',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
 }

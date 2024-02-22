@@ -16,9 +16,11 @@ import { RegisteredUser } from 'src/auth/entity/registered.user.entity';
 import { MessageStructure } from 'src/users/entity/message.entity';
 import { MessageDto } from 'src/users/dto';
 import { Repository } from 'typeorm';
-import { MessageSendDto } from './dto';
+import { UsersService } from 'src/users/users.service';
+import { MessageService } from 'src/message/message.service';
+import { SignUpDto } from 'src/auth/dto';
 
-@WebSocketGateway(3001, {
+@WebSocketGateway({
   cors: {
     // origin: ['http://localhost:5500', 'http://localhost:8080'],
     origin: '*',
@@ -37,6 +39,8 @@ export class EventsGateway implements OnModuleInit {
     private userRepository: Repository<RegisteredUser>,
     @InjectRepository(MessageStructure)
     private msgRepository: Repository<MessageStructure>,
+    private userService: UsersService,
+    private messageService: MessageService,
   ) {}
 
   @WebSocketServer()
@@ -94,32 +98,55 @@ export class EventsGateway implements OnModuleInit {
     return { event, data };
   }
 
+  @SubscribeMessage('new-user-joined')
+  async handleNewAndExistingUserJoined(client: any, data: any) {
+    const createUserDto = new SignUpDto();
+    createUserDto.email = data.email;
+    createUserDto.username = data.username;
+    createUserDto.password = data.password;
+    createUserDto.socketId = client.id;
+    console.log(' Inside new-user-joined !! ', createUserDto);
+    const registrationStatus =
+      await this.userService.registerOrLoginUser(createUserDto);
+    console.log(' registrationStatus ', registrationStatus);
+    client.emit('registration-response', { success: registrationStatus });
+  }
+
   @SubscribeMessage('send')
-  handleSendMessage(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() body: MessageSendDto,
-    // @Req() req: Request,
+  async handleSend(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() messageBody: any,
+    @Req() req: Request,
   ) {
-    // const senderId = socket.id;
-    //Using object destructuring .
-    // console.log('req info ', req.user['email']);
-    const { senderName, receiverName, msg } = body;
+    console.log(' Req user ', req.user['email'], ' json ', messageBody);
+    console.log(JSON.parse(JSON.stringify(messageBody)));
+    const { receiverName, senderName, message } = messageBody;
     console.log(
-      'senderName ',
-      senderName,
-      ' receiverName ',
+      'Inside handle send ',
       receiverName,
-      ' msg ',
-      msg,
+      ' ',
+      senderName,
+      ' ',
+      message,
     );
-    const senderId = socket.id;
-    // either provided some receiverId here , or if stored into database , fetch it and then use it . here.
-    const receiverId = 'Unknown';
-    console.log(' senderId ', senderId, ' receiver Id ', receiverId);
-    // For now , sending to the same senderId
-    this.server.to(senderId).emit('receive', {
-      status: 'msg received',
-      content: msg,
-    });
+    const socketId =
+      await this.userService.findSocketIdByUsername(receiverName);
+    const senderUserId = await this.userService.findUserIdByUserName(
+      senderName,
+      // req.user['email'],
+    );
+    const receiverUserId = await this.userService.findUserIdByUserName(
+      receiverName,
+      // req.user['email'],
+    );
+    const messageDto = new MessageDto();
+    messageDto.sender_user_id = senderUserId;
+    messageDto.receiver_user_id = receiverUserId;
+    messageDto.msg = message;
+    console.log(' handle send --- ', messageDto);
+    await this.messageService.addChatHistory(messageDto);
+    this.server
+      .to(socketId)
+      .emit('receive', { receiverName, senderName, message });
   }
 }

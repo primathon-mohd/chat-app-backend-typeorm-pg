@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>iChat - Realtime Node Socket.io Chat App</title>
-    <script defer src="http://localhost:3001/socket.io/socket.io.js"></script>
+    <script defer src="http://localhost:3000/socket.io/socket.io.js"></script>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.js"
       integrity="sha512-tE1z+95+lMCGwy+9PnKgUSIeHhvioC9lMlI7rLWU0Ps3XTdjRygLcy4mLuL0JAoK4TLdQEyP0yOl/9dMOqpH/Q=="
@@ -13,11 +13,12 @@
     ></script>
     <script defer src="./constant.js"></script>
     <script defer src="./chat-socket.js"></script>
-    <!-- <link rel="stylesheet" href="./style.css" /> -->
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
+    <input type="text" name="email" id="email" placeholder="Enter your email" />
     <input type="text" id="username" placeholder="Enter your username" />
-    <!-- <input type="text" id="password" placeholder="Enter your password" />
+    <input type="text" id="password" placeholder="Enter your password" />
     <button onclick="joinChat()">Join chat</button>
     <div id="search-container" >
       <label for="userDropdown">Select a user:</label>
@@ -25,9 +26,10 @@
       <button onclick="startChat()">Submit</button>
       <div id="chatDiv"></div>
     </div>
-    <div id="chat-history"></div> -->
+    <div id="chat-history"></div>
     <div id="chat-container" >
       <div id="chat"></div>
+      <div id="chat-b"></div>
       <input type="text" id="message" placeholder="Type your message" />
       <button onclick="sendMessage()">Send Message</button>
     </div>
